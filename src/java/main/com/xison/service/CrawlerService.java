@@ -1,82 +1,86 @@
 package com.xison.service;
 
 import com.google.common.collect.Lists;
-import com.xison.mapper.SongMapper;
-import com.xison.mapper.WebPageMapper;
-import com.xison.mapper.model.Song;
-import com.xison.mapper.model.WebPage;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+import com.xison.reposittory.SongRepository;
+import com.xison.reposittory.WebPageRepository;
+import com.xison.model.Song;
+import com.xison.model.WebPage;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
+
 /**
  * Created by admin on 2016/12/6.
  */
+@Service
 public class CrawlerService {
 
     private final CacheManager cacheManager;
 
-    private final String cacheName = "com.xison.Songs";
-
-    public static final Integer MAX_THREADS = 20;
+    private static final Integer MAX_THREADS = 20;
 
     @Autowired
-    SongMapper songMapper;
+    SongRepository songRepository;
 
     @Autowired
-    WebPageMapper webPageMapper;
+    WebPageRepository webPageRepository;
 
     public CrawlerService() {
         cacheManager = CacheManager.getInstance();
     }
 
     public WebPage savePage(WebPage webPage) {
-        WebPage result = webPageMapper.findOne(webPage.getUrl());
-        return result == null ? webPageMapper.saveAndFlush(webPage) : result;
+        WebPage result = webPageRepository.findOne(webPage.getUrl());
+        return result == null ? webPageRepository.saveAndFlush(webPage) : result;
     }
 
     public Song saveSong(Song song) {
-        Song result = songMapper.findOne(song.getUrl());
-        if(result == null) {
-            result = songMapper.saveAndFlush(song);
+        Song result = songRepository.findOne(song.getUrl());
+        if (result == null) {
+            result = songRepository.saveAndFlush(song);
         } else {
             result.setCommentCount(song.getCommentCount());
-            result = songMapper.saveAndFlush(result);
+            result = songRepository.saveAndFlush(result);
         }
         return result;
     }
 
     public WebPage update(WebPage webPage) {
-        return webPageMapper.save(webPage);
+        return webPageRepository.save(webPage);
     }
 
     public void reset() {
-        webPageMapper.resetStatus(WebPage.Status.uncrawl);
+        webPageRepository.resetStatus(WebPage.Status.uncrawl);
     }
 
     public synchronized WebPage getUnCrawlPage() {
-        WebPage webPage = webPageMapper.findTopByStatus(WebPage.Status.uncrawl);
+        WebPage webPage = webPageRepository.findTopByStatus(WebPage.Status.uncrawl);
         webPage.setStatus(WebPage.Status.crawled);
-        return webPageMapper.save(webPage);
+        return webPageRepository.save(webPage);
     }
 
     private void init(String catalog) {
         List<WebPage> webPages = Lists.newArrayList();
-        for(int i = 0; i < 43; i++) {
-            webPages.add(new WebPage("http://music.163.com/discover/playlist/?order=hot&cat=" + catalog + "&limit=35&offset=" + (i * 35), WebPage.PageType.playlists));
+        for (int i = 0; i < 43; i++) {
+            webPages.add(new WebPage(
+                "http://music.163.com/discover/playlist/?order=hot&cat=" + catalog + "&limit=35&offset=" + (i * 35),
+                WebPage.PageType.playlists));
         }
-        webPageMapper.save(webPages);
+        webPageRepository.save(webPages);
     }
 
     @Async
     public void init() {
-        webPageMapper.deleteAll();
+        webPageRepository.deleteAll();
         init("全部");
         init("华语");
         init("欧美");
@@ -155,25 +159,25 @@ public class CrawlerService {
     @Async
     public void crawl() throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
-        for(int i = 0; i < MAX_THREADS; i++) {
+        for (int i = 0; i < MAX_THREADS; i++) {
             executorService.execute(new CrawlerThread(this));
         }
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+        String cacheName = "com.xison.Songs";
         Ehcache ehcache = cacheManager.getEhcache(cacheName);
         ehcache.removeAll();
     }
 
     @Async
     public void update() throws InterruptedException {
-        List<Song> webPages = songMapper.findByCommentCountGreaterThan(5000L);
+        List<Song> webPages = songRepository.findByCommentCountGreaterThan(5000L);
         webPages.forEach(s -> {
-            WebPage p = webPageMapper.findOne(s.getUrl());
+            WebPage p = webPageRepository.findOne(s.getUrl());
             p.setStatus(WebPage.Status.uncrawl);
-            webPageMapper.save(p);
+            webPageRepository.save(p);
         });
         crawl();
     }
-
 
 }

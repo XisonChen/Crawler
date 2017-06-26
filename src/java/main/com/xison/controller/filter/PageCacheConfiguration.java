@@ -18,7 +18,7 @@ public class PageCacheConfiguration {
 
     @Bean
     public FilterRegistrationBean registerBlogsPageFilter(){
-        CustomPageCachingFilter customPageCachingFilter = new CustomPageCachingFilter("com.tianmaying.Songs");
+        CustomPageCachingFilter customPageCachingFilter = new CustomPageCachingFilter("com.xison.Songs");
         FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
         filterRegistrationBean.setFilter(customPageCachingFilter);
         List<String> urls = new ArrayList<String>();

@@ -1,6 +1,6 @@
 package com.xison.controller;
 
-import com.xison.mapper.SongMapper;
+import com.xison.reposittory.SongRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class SongController {
 
     @Autowired
-    SongMapper songMapper;
+    SongRepository songRepository;
 
     @GetMapping({"/songs", ""})
     public String songs(Model model,
                         @PageableDefault(size = 100, sort = "commentCount", direction = Sort.Direction.DESC) Pageable pageable) {
-        model.addAttribute("songs", songMapper.findAll(pageable));
+        model.addAttribute("songs", songRepository.findAll(pageable));
         return "songs";
     }
 

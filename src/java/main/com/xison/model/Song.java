@@ -1,10 +1,15 @@
-package com.xison.mapper.model;
+package com.xison.model;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * Created by admin on 2016/12/6.
  */
+@Entity
 public class Song {
 
+    @Id
     private String url;
     private String title;
     private Long commentCount;

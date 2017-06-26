@@ -1,16 +1,17 @@
-package com.xison.mapper;
+package com.xison.reposittory;
 
-import com.xison.mapper.model.WebPage;
+import com.xison.model.WebPage;
+
+import javax.transaction.Transactional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import javax.transaction.Transactional;
-
 /**
  * Created by admin on 2016/12/6.
  */
-public interface WebPageMapper extends JpaRepository<WebPage, String> {
+public interface WebPageRepository extends JpaRepository<WebPage, String> {
 
     WebPage findTopByStatus(WebPage.Status status);
 

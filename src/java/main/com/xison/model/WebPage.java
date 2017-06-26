@@ -1,6 +1,7 @@
-package com.xison.mapper.model;
+package com.xison.model;
 
 
+import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
@@ -9,6 +10,7 @@ import javax.persistence.Transient;
 /**
  * Created by admin on 2016/12/6.
  */
+@Entity
 public class WebPage {
 
     public enum PageType {

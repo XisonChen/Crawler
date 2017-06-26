@@ -15,5 +15,5 @@
             timeToLiveSeconds="36000"
             />
             
-    <cache name="com.tianmaying.Songs"></cache>
+    <cache name="com.xison.Songs"></cache>
 </ehcache>
